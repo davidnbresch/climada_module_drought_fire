@@ -1,17 +1,19 @@
 function hazard=climada_bf_hazard_set(bf,centroids,fscrew,areascrew,hazard_set_file)
 % climada template
 % MODULE:
-%   bushfire
+%   drought_fire
 % NAME:
 %   climada_bf_hazard_set
 % PURPOSE:
-%   Generate a bf (bushfire) hazard event set for average fires in Victoria
-%   (Australia)
+%   Generate a BF (bushfire) hazard event set. 
 %
-%   Each fire is attributed to 1 centroid (because
+%   The TEST case for average fires in Victoria, Australia, see code bf_TEST
+%
+%   Each fire is attributed to 1 centroid (valid for centroids down to 10km
+%   resolution, revise if using 1km or finer).
 %
 %   previous: likely climada_bf_generator.m
-%   next: diverse
+%   next: e.g climada_EDS_calc
 % CALLING SEQUENCE:
 %   hazard = climada_bf_hazard_set(bf,centroids,fscrew,areascrew,hazard_set_file);
 % EXAMPLE:
@@ -29,7 +31,9 @@ function hazard=climada_bf_hazard_set(bf,centroids,fscrew,areascrew,hazard_set_f
 %               in format 1+%increase -> eg for 30% increase areascrwe = 1.3
 % OUTPUTS:
 % MODIFICATION HISTORY:
-% David N. Bresch, david.bresch@gmail.com, 20150128
+% beuschl@student.ethz.ch, 20160601, initial, key author
+% horatc@student.ethz.ch, 20160601, initial, key author
+% david.bresch@gmail.com, 20160601, climada-compatibility
 %-
 
 hazard=[]; % init output
@@ -40,14 +44,11 @@ if ~climada_init_vars,return;end % init/import global variables
 %%if climada_global.verbose_mode,fprintf('*** %s ***\n',mfilename);end % show routine name on stdout
 
 % poor man's version to check arguments
-% and to set default value where  appropriate
-%if ~exist('param1','var'),bf=[];end % OR:
 if ~exist('bf','var'),bf=[];end % in case we want to pass all parameters as structure
 if ~exist('centroids','var'),centroids=[];end % in case we want to pass all parameters as structure
 if ~exist('fscrew','var'),fscrew=[];end
 if ~exist('areascrew','var'),areascrew=[];end
 if ~exist('hazard_set_file','var'),hazard_set_file=[];end
-%if ~exist('param2','var'),param2=[];end
 
 % locate the module's (or this code's) data folder (usually  afolder
 % 'parallel' to the code folder, i.e. in the same level as code folder)
@@ -64,10 +65,10 @@ data_folder=[climada_global.data_dir filesep 'hazards' filesep '_data'];
 if ~exist(data_folder,'dir'),[fP,fN]=fileparts(data_folder);mkdir(fP,fN);end
 
 
-% prompt for bf if not given
+% prompt for bf intermediate step data file if not given
 if isempty(bf) % local GUI
     bf                   = [data_folder filesep '*.mat'];
-    [filename, pathname] = uigetfile(bf, 'Select proto hazard set set:');
+    [filename, pathname] = uigetfile(bf, 'Select proto hazard set:');
     if isequal(filename,0) || isequal(pathname,0)
         return; % cancel
     else
@@ -78,7 +79,7 @@ end
 
 if isempty(centroids) % local GUI
     centroids             = [climada_global.data_dir filesep 'centroids' filesep '*.mat'];
-    [filename, pathname] = uigetfile(centroids, 'Select centroids set:');
+    [filename, pathname] = uigetfile(centroids, 'Select centroids:');
     if isequal(filename,0) || isequal(pathname,0)
         return; % cancel
     else
@@ -102,13 +103,30 @@ end
 [fP,fN,fE]=fileparts(hazard_set_file);
 if isempty(fP),hazard_set_file=[climada_global.data_dir filesep 'hazards' filesep fN fE];end
 
+if isfield(centroids,'assets')
+    % centroids contains in fact an entity
+    entity=centroids; centroids=[]; % silly switch, but fastest
+    centroids.lat =entity.assets.lat;
+    centroids.lon=entity.assets.lon;
+    centroids.centroid_ID=1:length(entity.assets.lon);
+    % treat optional fields
+    if isfield(entity.assets,'distance2coast_km'),centroids.distance2coast_km=entity.assets.distance2coast_km;end
+    if isfield(entity.assets,'elevation_m'),centroids.elevation_m=entity.assets.elevation_m;end
+    if isfield(entity.assets,'country_name'),centroids.country_name=entity.assets.country_name;end
+    if isfield(entity.assets,'admin0_name'),centroids.admin0_name=entity.assets.admin0_name;end
+    if isfield(entity.assets,'admin0_ISO3'),centroids.admin0_ISO3=entity.assets.admin0_ISO3;end
+    if isfield(entity.assets,'admin1_name'),centroids.admin1_name=entity.assets.admin1_name;end
+    if isfield(entity.assets,'admin1_code'),centroids.admin1_code=entity.assets.admin1_code;end
+    clear entity
+end
+
 % template for-loop with waitbar or progress to stdout
 t0       = clock;
 n_events = size(bf,2);
-msgstr   = sprintf('processing %i events',n_events);
+msgstr   = sprintf('processing %i events @ %i centroids',n_events,length(centroids.lon));
 mod_step = 10; % first time estimate after 10 events, then every 100
 
-fprintf('%s (waitbar suppressed)\n',msgstr);
+fprintf('%s\n',msgstr);
 format_str='%s';
 
 hazard.intensity = zeros(size(bf,2),size(centroids.centroid_ID,2));

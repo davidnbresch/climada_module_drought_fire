@@ -1,17 +1,17 @@
 function bf=bf_generator(number_years,store_intensity_field)
 % BF event probabilistic
 % MODULE:
-%   bushfire
+%   drought_fire
 % NAME:
-%   climada_bf_generator
+%   bf_generator
 % PURPOSE:
 %   generate a hazard event set of bushfires for a specified number of
 %   years and domain. It is currently set up for the region of Melbourne
 %   with corresponding data. Next step: climada_bf_hazard_set.m
 % CALLING SEQUENCE:
-%   climada_bf_generator(number_years);
+%   bf_generator(number_years);
 % EXAMPLE:
-%   climada_bf_generator(5);
+%   bf_generator(5);
 % INPUTS:
 %   number_years: how many years of bushfire you want to simulate
 %   store_intensity_field: if non-zero: matrix of size dx times dy, 
@@ -31,9 +31,11 @@ function bf=bf_generator(number_years,store_intensity_field)
 %   with bf(i).intensity_field: matrix of size dx times dy which contains
 %   intensities - note: only needed for plots. comment otherwise  needs a 
 %   lot of memory (see below)
-
 % MODIFICATION HISTORY:
-% Christoph Horat, horatc@student.ethz.ch, 20160601
+% beuschl@student.ethz.ch, 20160601, initial, key author
+% horatc@student.ethz.ch, 20160601, initial, key author
+% david.bresch@gmail.com, 20160601, climada-compatibility
+%-
 
 global climada_global
 if ~climada_init_vars,return;end % init/import global variables
@@ -86,8 +88,15 @@ cells_burnt = 0;
 
 p_threshold = 0.475; % if random number > p_threshold, fire is lighted
 
+% init
+n_o=1000000;
+bf_lon=zeros(1,n_o);
+bf_lat=zeros(1,n_o);
+bf_intensity=zeros(1,n_o);
+bf_no_year=zeros(1,n_o);
+
 % START OF BUSHFIRE COMPUTATION
-for o = 1:1000000
+for o = 1:n_o
     if cells_burnt >= set_cells_burnt
         break;
     else
@@ -95,7 +104,7 @@ for o = 1:1000000
     % INITIALISATION
     % elements of tensor A can take on three different values: 
     % 0: unburnt cell - ready to burn
-    % 1: fire -         certain probability that neighbouring cell is on fire 
+    % 1: fire         - certain probability that neighbouring cell is on fire 
     %                   as well in next time step, diagonal neighbours excluded
     % 2: ember (Glut) - still causing damage but does not ignite any
     %                   neighbouring cells
@@ -167,8 +176,8 @@ for o = 1:1000000
     [i,j,s] = find(B);
 
     % transform indizes into longitude and latitude, write it in struct array
-    bf(o).lon = domain_lon_ll + i./scale_lon;
-    bf(o).lat = domain_lat_ll + j./scale_lat;
+    bf_lon(o) = domain_lon_ll + i./scale_lon;
+    bf_lat(o) = domain_lat_ll + j./scale_lat;
     bf(o).intensity = s;
     bf(o).no_year = number_years;
 
@@ -177,7 +186,7 @@ for o = 1:1000000
     end
     
     cells_burnt = cells_burnt + nnz(B);
-    o
+    %o % to print to stdout takes a lot of time
     end
 end
 
@@ -192,6 +201,12 @@ if isempty(bf_file) % local GUI
     end
     save(bf_file,'bf'); 
 end
+
+% store to output
+bf.lon       = bf_lon;
+bf.lat       = bf_lat;
+bf.intensity = bf_intensity;
+bf.no_year   = bf_no_year;
 
 fprintf('Observed number of fires: ');
 number_years*average_no
