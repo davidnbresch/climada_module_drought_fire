@@ -1,0 +1,37 @@
+<hr>
+README: NASA FIRMS MODIS Thermal Anomalies/ Fire Locations Download<br>
+<hr>
+This zip file supplied contains the data for the requested dates in your area-of-interest. Depending on the date range selected you may receive 1 or 2 files containing: <br> <br>
+i)	<i>_NRT files (e.g. firmsxxxxxNRT.shp, firmsxxxxxNRT.csv)</i> contain MCD14DL data: : Near Real-Time (NRT) MODIS Thermal Anomalies / Fire locations processed by NASA FIRMS, part of the Land Atmosphere Near real-time Capability for EOS (LANCE).  
+<br><br>
+and/or
+<br><br>
+ii)	<i>_MCD14ML files (e.g. firmsxxxx_MCD14ML.shp, firmsxxxx_MCD14ML.csv) </i> contain MCD14ML Standard/science Quality MODIS Thermal Anomalies / Fire locations processed by the University of Maryland with a  3-month lag and distributed by NASA FIRMS. These data replace the MCD14DL when available. <br><br>
+Both MCD14ML and MCD14DL are processed using the same MOD14 Fire and Thermal Anomalies Algorithm but the NRT version (MCD14DL) uses predicted (attitude and ephemeris) geolocation and the standard / science quality version (MCD14ML) uses definitive (attitude and ephemeris) geolocation.  <br><br>
+The difference between MODIS geolocation when using predicted vs. definitive attitude and ephemeris is routinely less than 100 meters. However, there are situations, particularly before and after spacecraft maneuvers and during space weather events, when the difference can increase up to several kilometers. The recommendation from EOSDIS is to reprocess data when the definitive attitude and ephemeris data become available. <br><br>
+The reason the files are split is to ensure users clearly distinguish between these two data sources. Should you wish to combine the datasets you will still be able to distinguish the source using the Collection. Version 5.0 indicates the data is the NRT version of Collection 5 data. Version 5.1 is the standard/science quality version of Collection 5. (See FIRMS FAQ, "What are Collections?" <a href="https://earthdata.nasa.gov/data/near-real-time-data/faq/firms">https://earthdata.nasa.gov/data/near-real-time-data/faq/firms</a>
+For more information regarding the attribute fields, please visit the following page: <a href="https://earthdata.nasa.gov/data/near-real-time-data/faq#firms20">https://earthdata.nasa.gov/data/near-real-time-data/faq#firms20</a>
+Visit the NASA FIRMS project website at <a href="http://earthdata.nasa.gov/firms">http://earthdata.nasa.gov/firms</a> <br><br>
+<hr>
+PROJECTION INFORMATION <br>
+<hr>
+The MODIS Thermal Anomalies/ Fire locations supplied to you are in the WGS-84 geographic projection (the "latitude/longitude projection", EPSG:4326). For help on importing the data into your local GIS, please refer to our FAQ at <a href="https://earthdata.nasa.gov/data/near-real-time-data/faq">https://earthdata.nasa.gov/data/near-real-time-data/faq</a>. <br><br>
+<hr>
+IMPORTANT<br>
+<hr>
+For further information, please refer to the latest version of the MODIS Fire Users Guide, which can be found at: <a href="https://earthdata.nasa.gov/data/near-real-time-data/firms/publications">https://earthdata.nasa.gov/data/near-real-time-data/firms/publications</a> and the FAQ section (<a href="https://earthdata.nasa.gov/data/near-real-time-data/faq">https://earthdata.nasa.gov/data/near-real-time-data/faq</a>).<br><br>
+Please note that there are data missing from several of the data sets. There is data missing from end of June to the beginning of July in 2001, 2002 is missing some data throughout the data set, 2007 has some missing data from mid August and data is missing for part of 21 April 2009, and missing for 22 April 2009. There might also be some erroneous data present in the data set. Please refer to the disclaimer below.<br><br>
+<hr>
+DATA CITATION <br>
+<hr>
+The data and graphics from FIRMS can be used freely. Please use the appropriate citation: <br><br>
+<b>Data Citation for MCD14DL:</b> This data set was provided by LANCE FIRMS operated by NASA/GSFC/ESDIS with funding provided by NASA/HQ <br><br>
+NASA Near Real-Time and MCD14DL MODIS Active Fire Detections (TXT format). Data set. Available on-line <a href="https://earthdata.nasa.gov/active-fire-data-tab-content-6">https://earthdata.nasa.gov/active-fire-data-tab-content-6</a> <br><br>
+<b>Data Citation for MCD14ML:</b> This data set was produced by the University of Maryland and provided by NASA FIRMS operated by NASA/GSFC/ESDIS with funding provided by NASA/HQ <br><br>
+Available on-line <a href="https://earthdata.nasa.gov/active-fire-data#tab-content-6">https://earthdata.nasa.gov/active-fire-data#tab-content-6</a> <br><br>
+<b>Data Citation for both MCD14DL and MCD14ML:</b> This data set was provided by the University of Maryland and NASA FIRMS operated by NASA/GSFC/ESDIS with funding provided by NASA/HQ <br><br>
+NASA Near Real-Time and MCD14DL and MCD14ML MODIS Active Fire Detections (TXT format). Data set. Available on-line <a href="https://earthdata.nasa.gov/active-fire-data#tab-content-6">https://earthdata.nasa.gov/active-fire-data#tab-content-6</a> <br><br>
+<hr>
+DISCLAIMER  <br>
+<hr>
+The LANCE system is operated by the NASA/GSFC Earth Science Data and Information System (ESDIS). The information presented through the LANCE Rapid Response system and the LANCE FIRMS are provided “as is” and users bear all responsibility and liability for their use of data, and for any loss of business or profits, or for any indirect, incidental or consequential damages arising out of any use of, or inability to use, the data, even if NASA or ESDIS were previously advised of the possibility of such damages, or for any other claim by you or any other person. ESDIS makes no representations or warranties of any kind, express or implied, including implied warranties of fitness for a particular purpose or merchantability, or with respect to the accuracy of or the absence or the presence or defects or errors in data, databases of other information. The designations employed in the data do not imply the expression of any opinion whatsoever on the part of ESDIS concerning the legal or development status of any country, territory, city or area or of its authorities, or concerning the delimitation of its frontiers or boundaries. For more information please contact the LANCE User Services at <a href="mailto:support@earthdata.nasa.gov?subject=FIRMS Archive Download Tool">support@earthdata.nasa.gov</a>  <br><br>
