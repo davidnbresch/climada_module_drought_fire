@@ -16,6 +16,11 @@ function [entity,hazard,params]=climadacrop_init(params)
 % EXAMPLE:
 %   [entity,hazard]=climadacrop_init; % set it all up
 %   climada_EDS_DFC(climada_EDS_calc(entity,hazard)) % plot risk curve
+%   for all damage function sampled:
+%   for i=1:max(entity.damagefunctions.DamageFunID)
+%     entity.assets.DamageFunID=entity.assets.DamageFunID*0+i;
+%     EDS(i)=climada_EDS_calc(entity,hazard,'',0,2);
+%   end
 %   params=climadacrop_init('params') % get default parameters
 % INPUTS:
 % OPTIONAL INPUT PARAMETERS:
@@ -45,6 +50,8 @@ function [entity,hazard,params]=climadacrop_init(params)
 %       climada_distance2coast_km listens to climada_global.parfor, set
 %       climada_global.parfor=1 for speedup).
 %    peril_ID: the 2-digit peril ID, default='AT'
+%    hazard_units: the units of the hazard intensity (used in hazard.units
+%       and entity.damagefunctions.Intensity_unit
 % OUTPUTS:
 %   entity: a climada entity structure, see climada_entity_read for a full
 %       description of all fields
@@ -88,7 +95,7 @@ if ~isfield(params,'add_country_ISO3'),   params.add_country_ISO3=[];end
 if ~isfield(params,'distance_to_coast'),  params.distance_to_coast=[];end
 if ~isfield(params,'centroids_file'),     params.centroids_file='';end % output only
 if ~isfield(params,'peril_ID'),           params.peril_ID='';end
-
+if ~isfield(params,'hazard_units'),       params.hazard_units='';end
 
 % PARAMETERS
 %
@@ -113,6 +120,8 @@ if isempty(params.check_plot),        params.check_plot=0;end
 if isempty(params.add_country_ISO3),  params.add_country_ISO3=0;end  %=1
 if isempty(params.distance_to_coast), params.distance_to_coast=1;end %=1
 if isempty(params.peril_ID),          params.peril_ID='AT';end
+if isempty(params.hazard_units),      params.hazard_units='Tcrit32';end
+
 if isempty(params.hazard_set_filename),params.hazard_set_filename=...
         [climada_global.hazards_dir filesep 'climadacrop_' params.peril_ID '.mat'];end
 %
@@ -120,7 +129,9 @@ if isempty(params.hazard_filename),  params.hazard_filename  =[climadacrop_data_
 if isempty(params.hazard_varname),   params.hazard_varname  ='days above 32 degrees';end
 if isempty(params.exposure_filename),params.exposure_filename=[climadacrop_data_dir filesep 'Maize_exposure.nc'];end
 if isempty(params.exposure_varname), params.exposure_varname='yield area';end
-if isempty(params.damfun_filename), params.damfun_filename='damage_function_best.csv';end
+%if isempty(params.damfun_filename), params.damfun_filename='damage_function_best.csv';end
+%if isempty(params.damfun_filename), params.damfun_filename='damage_functions.csv';end
+if isempty(params.damfun_filename), params.damfun_filename='damage_function_sampled.csv';end
 
 % complete path, if missing:
 [fP,fN,fE]=fileparts(params.hazard_set_filename);
@@ -161,8 +172,8 @@ end
 n_events=length(nc_hazard.time);
 n_centroids=length(vectlon);
 % make a local copy of all the small fields
-hazard.peril_ID=params.peril_ID;
-hazard.units          ='HotDD';
+hazard.peril_ID       = params.peril_ID;
+hazard.units          = params.hazard_units;
 hazard.reference_year = nc_hazard.time(1);
 hazard.lon            = vectlon;
 hazard.lat            = vectlat;
@@ -237,27 +248,71 @@ end % params.add_country_ISO3
 % complete entity
 entity.assets.Cover      =entity.assets.Value;
 entity.assets.Deductible =entity.assets.Value*0;
-entity.assets.DamageFunID=entity.assets.Deductible+1;
+entity.assets.DamageFunID=ones(1,length(entity.assets.Value));
 entity.assets.Category_ID=entity.assets.DamageFunID;
 entity.assets.Region_ID  =entity.assets.DamageFunID;
 
 if isfield(entity.assets,'Value_unit'),entity.assets=rmfield(entity.assets,'Value_unit');end
 if isfield(entity.assets,'hazard'),entity.assets=rmfield(entity.assets,'hazard');end
 
-% add damagefunction (imporetd from .csv file)
+% add damagefunction (imported from .csv file)
 damfun_data=climada_csvread(params.damfun_filename);
-n_points=length(damfun_data.Intensity);
-% see damage_function_best.csv
+n_points=length(damfun_data.Tcritdays);
 if isfield(entity,'damagefunctions'),entity=rmfield(entity,'damagefunctions');end
+if isfield(damfun_data,'damage'),damfun_data.sample_001=damfun_data.damage;end % old naming
 entity.damagefunctions.filename=params.damfun_filename;
 entity.damagefunctions.DamageFunID=ones(n_points,1);
-entity.damagefunctions.Intensity=damfun_data.Intensity';
-entity.damagefunctions.MDD=damfun_data.MDD';
-entity.damagefunctions.PAA=damfun_data.PAA';
-entity.damagefunctions.peril_ID=repmat({hazard.peril_ID},size(entity.damagefunctions.PAA));
-entity.damagefunctions.Intensity_unit=repmat({'K'},size(entity.damagefunctions.PAA));
-entity.damagefunctions.name=repmat({'Tcritdays'},size(entity.damagefunctions.PAA));
-entity.damagefunctions.datenum=repmat(now,size(entity.damagefunctions.PAA));
+entity.damagefunctions.Intensity=damfun_data.Tcritdays';
+if max(entity.damagefunctions.Intensity)<max(max(hazard.intensity))
+    fprintf('Warning: damage function intensity range (%2.2f..%2.2f) smaller than hazard intensity (0..%2.2f) range\n',...
+        min(entity.damagefunctions.Intensity),max(entity.damagefunctions.Intensity),full(max(max(hazard.intensity))));
+end
+if max(damfun_data.sample_001)>2
+    damfun_data_fact=1/100;
+    fprintf('Note: damage function MDD converted to decimal from percent, new min/max: %2.3f/%2.3f\n',...
+        damfun_data_fact*min(damfun_data.sample_001),damfun_data_fact*max(damfun_data.sample_001));
+end
+entity.damagefunctions.MDD=damfun_data_fact*damfun_data.sample_001';
+
+n_samples=0; % init
+DamageFunID=zeros(1,101); % to start with
+% more than one sample, stack it up
+% parse all names, figure the number of samples
+% (to pre-allocate for speedup)
+sample_names=fieldnames(damfun_data);
+for sample_i=1:length(sample_names)
+    if strfind(sample_names{sample_i},'sample')
+        DamageFunID(sample_i)=str2double(strrep(sample_names{sample_i},'sample_',''));
+        if ~isnan(DamageFunID(sample_i)),n_samples=n_samples+1;end
+    end
+end % sample_i
+% allocate
+entity.damagefunctions.DamageFunID=zeros(n_samples*n_points,1);
+entity.damagefunctions.Intensity  =zeros(n_samples*n_points,1);
+entity.damagefunctions.MDD        =zeros(n_samples*n_points,1);
+entity.damagefunctions.PAA        = ones(n_samples*n_points,1);
+pos1=1;pos2=n_points;
+if params.check_plot,figure('Name','Damage function (samples)','Color',[1 1 1]);end
+% 2nd round, now populating the data
+if n_samples>1,fprintf('%i damage function samples, each %i points\n',n_samples,n_points);end
+for ID_i=1:length(DamageFunID)
+    if DamageFunID(ID_i)>0
+        entity.damagefunctions.DamageFunID(pos1:pos2)=DamageFunID(ID_i);
+        entity.damagefunctions.Intensity(pos1:pos2)=damfun_data.Tcritdays';
+        entity.damagefunctions.MDD(pos1:pos2)=damfun_data_fact*damfun_data.(sample_names{ID_i})';
+        entity.damagefunctions.MDD(pos1:pos2)=sort(entity.damagefunctions.MDD(pos1:pos2)); % sort ascending
+        if params.check_plot
+            plot(entity.damagefunctions.Intensity(pos1:pos2),entity.damagefunctions.MDD(pos1:pos2),'-b');hold on
+        end
+
+        pos1=pos2+1;pos2=pos2+n_points; % point to next free range
+    end 
+end % ID_i
+% add further fields
+entity.damagefunctions.peril_ID=repmat({hazard.peril_ID},size(entity.damagefunctions.MDD));
+entity.damagefunctions.Intensity_unit=repmat({params.hazard_units},size(entity.damagefunctions.MDD));
+entity.damagefunctions.name=repmat({'Tcritdays'},size(entity.damagefunctions.MDD));
+entity.damagefunctions.datenum=repmat(now,size(entity.damagefunctions.MDD));
 
 entity.assets = climada_assets_complete(entity.assets);
 
@@ -269,6 +324,16 @@ entity.assets.exposure_filename =params.exposure_filename;
 if verbose,fprintf('saving entity as %s\n',entity.assets.filename);end
 save(entity.assets.filename,'entity','-v7.3'); % -v7.3 for size...
 
-if params.check_plot,climada_entity_plot(entity);end
+if params.check_plot,figure;climada_entity_plot(entity);end
+
+if params.check_plot==2
+    fprintf('sampling %i EDSs ...',n_samples);
+    for i=1:max(entity.damagefunctions.DamageFunID)
+        entity.assets.DamageFunID=entity.assets.DamageFunID*0+i;
+        EDS(i)=climada_EDS_calc(entity,hazard,'',0,2);
+    end
+    fprintf(' done. Plotting...\n');
+    climada_EDS_DFC(EDS,EDS(1)) % plot risk curve
+end % params.check_plot==2
 
 end % climadacrop_init
