@@ -14,7 +14,8 @@ function [entity,hazard,params]=climadacrop_init(params)
 % CALLING SEQUENCE:
 %   [entity,hazard,params]=climadacrop_init(params)
 % EXAMPLE:
-%   [entity,hazard]=climadacrop_init;
+%   [entity,hazard]=climadacrop_init; % set it all up
+%   climada_EDS_DFC(climada_EDS_calc(entity,hazard)) % plot risk curve
 %   params=climadacrop_init('params') % get default parameters
 % INPUTS:
 % OPTIONAL INPUT PARAMETERS:
@@ -22,15 +23,15 @@ function [entity,hazard,params]=climadacrop_init(params)
 %    hazard_filename: filename of the .nc file with the crop data
 %       if no path is provided, the default climadacrop path is assumed
 %       (=[climada_global.data_dir,'climadacrop']).
-%    hazard_varname: the varialbe name of in the netCFD file, 
-%       default='days above 32 degrees' 
+%    hazard_varname: the varialbe name of in the netCFD file,
+%       default='days above 32 degrees'
 %    hazard_set_filename: the name the climada hazard set gets stored to
 %       default=[climada_global.hazards_dir 'climadacrop_' params.peril_ID '.mat']
 %    exposure_filename: filename of the .nc file with the exposure data
 %       if no path is provided, the default climadacrop path is assumed
 %       (=[climada_global.data_dir,'climadacrop']).
-%    exposure_varname: the varialbe name of in the netCFD file, 
-%       default='days above 32 degrees' 
+%    exposure_varname: the varialbe name of in the netCFD file,
+%       default='days above 32 degrees'
 %    damfun_filename: the filename of the .csv file containing the damage
 %       function(s)
 %    check_plot: whether show a check plot (=1), or not (=0, default)
@@ -42,7 +43,7 @@ function [entity,hazard,params]=climadacrop_init(params)
 %       inner-continental points). Set =0 in special cases, as initial
 %       calculation might easily take some time, but since
 %       climada_distance2coast_km listens to climada_global.parfor, set
-%       climada_global.parfor=1 for speedup). 
+%       climada_global.parfor=1 for speedup).
 %    peril_ID: the 2-digit peril ID, default='AT'
 % OUTPUTS:
 %   entity: a climada entity structure, see climada_entity_read for a full
@@ -110,7 +111,7 @@ admin0_shape_file=climada_global.map_border_file;
 % populate default parameters in params
 if isempty(params.check_plot),        params.check_plot=0;end
 if isempty(params.add_country_ISO3),  params.add_country_ISO3=0;end  %=1
-if isempty(params.distance_to_coast), params.distance_to_coast=0;end %=1
+if isempty(params.distance_to_coast), params.distance_to_coast=1;end %=1
 if isempty(params.peril_ID),          params.peril_ID='AT';end
 if isempty(params.hazard_set_filename),params.hazard_set_filename=...
         [climada_global.hazards_dir filesep 'climadacrop_' params.peril_ID '.mat'];end
@@ -151,6 +152,11 @@ vectlon=reshape(gridlon,[1 numel(gridlon)]); % as 1-D vect
 vectlat=reshape(gridlat,[1 numel(gridlat)]);
 if verbose,fprintf(' done\n');end
 
+if params.distance_to_coast
+    fprintf('> calculating distance to coast of %i land points, takes time...\n',length(vectlat))
+    distance2coast_km=climada_distance2coast_km(vectlon,vectlat);
+end
+
 % no data in hazard
 n_events=length(nc_hazard.time);
 n_centroids=length(vectlon);
@@ -160,6 +166,7 @@ hazard.units          ='HotDD';
 hazard.reference_year = nc_hazard.time(1);
 hazard.lon            = vectlon;
 hazard.lat            = vectlat;
+if exist('distance2coast_km','var'),hazard.distance2coast_km=distance2coast_km;end
 hazard.centroid_ID    = 1:n_centroids;
 hazard.orig_years     = n_events;
 hazard.orig_event_count = n_events;
@@ -253,6 +260,8 @@ entity.damagefunctions.name=repmat({'Tcritdays'},size(entity.damagefunctions.PAA
 entity.damagefunctions.datenum=repmat(now,size(entity.damagefunctions.PAA));
 
 entity.assets = climada_assets_complete(entity.assets);
+
+if exist('distance2coast_km','var'),entity.assets.distance2coast_km=distance2coast_km;end
 
 % add the source files
 entity.assets.exposure_filename =params.exposure_filename;
