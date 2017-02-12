@@ -5,7 +5,7 @@ function [entity,hazard,params]=climadacrop_init(params)
 % NAME:
 %   climadacrop_init
 % PURPOSE:
-%   setup the climada crop module, generate the hazard set (hazatrd) the
+%   setup the climada crop module, generate the hazard set (hazard) the
 %   asset and damage function database (entity) from netCDF and .csv files
 %
 %   DESCRIPTION PENDING
@@ -40,6 +40,8 @@ function [entity,hazard,params]=climadacrop_init(params)
 %    damfun_filename: the filename of the .csv file containing the damage
 %       function(s)
 %    check_plot: whether show a check plot (=1), or not (=0, default)
+%       if =2, run a test calculation, too, and show resulting damage
+%       frequency curve (DFC). If=-2, only test calc and DFC, no other plot
 %    add_country_ISO3: whether show add country ISO3 code to each gridcell
 %       (default=1)
 %    distance_to_coast: whether we calculate distant to coast (in km) of
@@ -324,16 +326,20 @@ entity.assets.exposure_filename =params.exposure_filename;
 if verbose,fprintf('saving entity as %s\n',entity.assets.filename);end
 save(entity.assets.filename,'entity','-v7.3'); % -v7.3 for size...
 
-if params.check_plot,figure;climada_entity_plot(entity);end
+if params.check_plot>0,figure;climada_entity_plot(entity);end
 
-if params.check_plot==2
-    fprintf('sampling %i EDSs ...',n_samples);
-    for i=1:max(entity.damagefunctions.DamageFunID)
-        entity.assets.DamageFunID=entity.assets.DamageFunID*0+i;
-        EDS(i)=climada_EDS_calc(entity,hazard,'',0,2);
-    end
-    fprintf(' done. Plotting...\n');
-    climada_EDS_DFC(EDS,EDS(1)) % plot risk curve
+if abs(params.check_plot)>1
+    fprintf('sampling %i EDSs ...\n',n_samples);
+    %n_samples=length(unique((entity.damagefunctions.DamageFunID));
+    climada_progress2stdout    % init
+    for sample_i=1:n_samples
+        entity.assets.DamageFunID=entity.assets.DamageFunID*0+sample_i;
+        EDS(sample_i)=climada_EDS_calc(entity,hazard,'',0,2);
+        climada_progress2stdout(sample_i,n_samples,10,'samples');
+    end % sample_i
+    climada_progress2stdout(0) % terminate
+    fprintf('Plotting...\n');
+    climada_EDS_DFC(EDS,EDS(1)); % plot risk curve
 end % params.check_plot==2
 
 end % climadacrop_init
