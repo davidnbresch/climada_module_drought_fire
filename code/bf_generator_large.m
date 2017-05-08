@@ -78,7 +78,7 @@ function hazard=bf_generator_large(csv_file,centroids,hazard_set_file)
 %           struct, this is often useful)
 % MODIFICATION HISTORY:
 % david.bresch@gmail.com, 20160703
-% david.bresch@gmail.com, 20170508, hint to bf_generator added
+% david.bresch@gmail.com, 20170508, hint to bf_generator added, frequency added
 %-
 
 hazard=[]; % init output
@@ -117,9 +117,10 @@ hazard_scenario = 'no climate change';
 % (that's the case for UNISYS tracks as read by climada_tc_read_unisys_database)
 create_yearset=0; % default=1 (not implemented yet)
 %
-% TEST files
-TEST_csv_file=[module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'firms.csv'];
-TEST_centroids_file=[module_data_dir filesep 'centroids' filesep 'AUS_BF_centroids.mat'];
+% TEST files, used if called as hazard=bf_generator_large('TEST')
+TEST_csv_file       =[module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'firms.csv'];
+TEST_centroids_file =[module_data_dir filesep 'centroids' filesep 'AUS_BF_centroids.mat'];
+TEST_entity_file    =[module_data_dir filesep 'entities' filesep 'Victoria_today_adaptation.xlsx'];
 TEST_hazard_set_file='_TEST_AUS_BF_hazard_large';
 TEST_event_i=3839;
 %TEST_centroids_file=[module_data_dir filesep 'AUS_Australia_Victoria_entity'];
@@ -203,8 +204,8 @@ y=[bbox(3)-dy bbox(4)+dy bbox(4)+dy bbox(3)-dy bbox(3)-dy];
 firms_in=inpolygon(firms.lon,firms.lat,x,y);
 
 if TEST_mode % TEST plot
-    figure('Name','TEST','Position',[576 198 791 475]);subplot(1,2,1);
-    event_i=TEST_event_i; % max number of points for event_i=357;
+    figure('Name','TEST hazard for Victoria','Position',[576 198 791 475]);subplot(2,2,1);
+    event_i=TEST_event_i; % max number of points for event_i=3839;
     event_pos= firms.datenum==firms.datenum_unique(event_i);
     plot(firms.lon,firms.lat,'.k','MarkerSize',1); hold on % all black
     xlim([bbox(1)-5*dx bbox(2)+5*dx]);ylim([bbox(3)-5*dy bbox(4)+5*dy]);axis equal
@@ -222,6 +223,7 @@ min_year = str2double(datestr(min(firms.datenum_unique),'yyyy'));
 max_year = str2double(datestr(min(firms.datenum_unique),'yyyy'));
 orig_years = max_year - min_year+1;
 hazard.peril_ID         = 'BF';
+hazard.units            = 'brightness';
 hazard.reference_year   = hazard_reference_year;
 hazard.lon              = centroids.lon;
 hazard.lat              = centroids.lat;
@@ -317,9 +319,14 @@ fprintf(format_str,''); % move carriage to begin of line
 
 hazard.intensity=intensity; clear intensity % for speedup above
 hazard.category=category; clear category % for speedup above
+hazard.fraction=spones(hazard.intensity); % fraction 100%
+
+% figure number of years and construct annual frequency
+n_years=str2double(datestr(max(hazard.datenum),'yyyy'))-str2double(datestr(min(hazard.datenum),'yyyy'))+1;
+hazard.frequency=ones(1,hazard.event_count)/n_years;
 
 if TEST_mode % TEST plot
-    subplot(1,2,2);climada_hazard_plot(hazard,-1);
+    subplot(2,2,2);climada_hazard_plot(hazard,-1);
 end
 
 if create_yearset
@@ -328,5 +335,13 @@ end % create_yearset
 
 fprintf('saving hazard as %s\n',hazard_set_file)
 save(hazard_set_file,'hazard');
+
+if TEST_mode && exist(TEST_entity_file,'file')
+   entity=climada_entity_read(TEST_entity_file,hazard);
+   %figure('Name','TEST damage frequency curve (DFC) for Vicoria');
+   subplot(2,2,3);climada_entity_plot(entity,2);title('Vicoria assets');
+   subplot(2,2,4);climada_EDS_DFC(climada_EDS_calc(entity,hazard));
+   title('damage frequency curve (DFC) for Vicoria');
+end % TEST_mode
 
 end % bf_generator_large

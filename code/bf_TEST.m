@@ -23,6 +23,7 @@
 % beuschl@student.ethz.ch, 20160601, initial, key author
 % horatc@student.ethz.ch, 20160601, initial, key author
 % david.bresch@gmail.com, 20160601, climada-compatibility
+% david.bresch@gmail.com, 20170508, plots in one window, checked
 %-
 
 %global climada_global
@@ -93,8 +94,8 @@ EDS_2030 = climada_EDS_calc(entity_2030,hazard_today);
 EDS_2030_CC_f3 = climada_EDS_calc(entity_2030,hazard_CC_f3);
 EDS_2030_CC_f65 = climada_EDS_calc(entity_2030,hazard_CC_f65);
 
-figure;climada_waterfall_graph(EDS_today,EDS_2030,EDS_2030_CC_f3); title('moderate climate change')
-figure;climada_waterfall_graph(EDS_today,EDS_2030,EDS_2030_CC_f65);title('high climate change')
+subplot(1,3,1);climada_waterfall_graph(EDS_today,EDS_2030,EDS_2030_CC_f3); title('moderate climate change')
+subplot(1,3,2);climada_waterfall_graph(EDS_today,EDS_2030,EDS_2030_CC_f65);title('high climate change')
 
 % Adaptation
 % ----------
@@ -116,9 +117,6 @@ diff_AED_sprinkler = res_today_adapt.ED(end)-res_today_adapt.ED(3);
 res_2030_adapt_CC_f3  = climada_measures_impact(entity_2030, hazard_CC_f3, res_today_adapt);
 res_2030_adapt_CC_f65 = climada_measures_impact(entity_2030, hazard_CC_f65,res_today_adapt);
 
-figure;climada_adaptation_cost_curve(res_2030_adapt_CC_f3)
-figure;climada_adaptation_cost_curve(res_2030_adapt_CC_f65)
-
 % for it to work needed to comment out row 324 in
 % climada_adaptation_cost_curve.m: clear clear measures_impact_comparison
-figure;climada_adaptation_cost_curve(res_2030_adapt_CC_f3,res_2030_adapt_CC_f65)
+subplot(1,3,3);climada_adaptation_cost_curve(res_2030_adapt_CC_f3,res_2030_adapt_CC_f65)

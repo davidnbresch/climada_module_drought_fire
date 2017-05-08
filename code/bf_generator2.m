@@ -6,7 +6,8 @@ function bf=bf_generator2(number_years,store_intensity_field)
 %   bf_generator
 % PURPOSE:
 %
-%   TEST versin to improove speed, dbresch
+%   TEST version to improove speed, UNDER CONSTRUCTION, david.bresch@gmail.com
+%   --> USE bf_generator FOR THE TIME BEING (and bf_TEST to get started)
 %
 %   generate a hazard event set of bushfires for a specified number of
 %   years and domain. It is currently set up for the region of Melbourne
@@ -39,6 +40,7 @@ function bf=bf_generator2(number_years,store_intensity_field)
 % beuschl@student.ethz.ch, 20160601, initial, key author
 % horatc@student.ethz.ch, 20160601, initial, key author
 % david.bresch@gmail.com, 20160601, climada-compatibility
+% david.bresch@gmail.com, 20170508, UNDER CONSTRUCTION
 %-
 
 global climada_global
