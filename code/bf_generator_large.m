@@ -27,6 +27,10 @@ function hazard=bf_generator_large(csv_file,centroids,hazard_set_file)
 %   Citation for both MCD14DL and MCD14ML: This data set was
 %   provided by the University of Maryland and NASA FIRMS operated by
 %   NASA/GSFC/ESDIS with funding provided by NASA/HQ
+%
+%   Developers hint: search for bf_generator in the code to integrate
+%   cellular automat to (re)fine fires.
+%
 % CALLING SEQUENCE:
 %   hazard=bf_generator_large(csv_file,param2)
 % EXAMPLE:
@@ -74,6 +78,7 @@ function hazard=bf_generator_large(csv_file,centroids,hazard_set_file)
 %           struct, this is often useful)
 % MODIFICATION HISTORY:
 % david.bresch@gmail.com, 20160703
+% david.bresch@gmail.com, 20170508, hint to bf_generator added
 %-
 
 hazard=[]; % init output
@@ -285,6 +290,10 @@ for event_i=1:n_events
         end % point_i
         
         intensity(event_i,:)= event_intensity;
+        
+        % here, one might consider to invoke bf_generator
+        % in order to generate small (sub)scale fires and
+        % higher resolution events using a cellular automat.
          
     end % sum(event_pos)>0
     
