@@ -1,4 +1,4 @@
-function hazard=bf_generator_large(csv_file,centroids,hazard_set_file)
+function hazard=bf_generator_large(csv_file,centroids,hazard_set_file,check_plot)
 % climada template
 % MODULE:
 %   drought_fire
@@ -50,7 +50,7 @@ function hazard=bf_generator_large(csv_file,centroids,hazard_set_file)
 %       (and name can be without extension .mat)
 %       > promted for if empty
 % OPTIONAL INPUT PARAMETERS:
-%   param2: as an example
+%   check_plot: whether we plot it (=1) or not (=0, default)
 % OUTPUTS:
 %   hazard: a struct, the hazard event set, more for tests, since the
 %       hazard set is stored as hazard_set_file, see code
@@ -79,6 +79,7 @@ function hazard=bf_generator_large(csv_file,centroids,hazard_set_file)
 % MODIFICATION HISTORY:
 % david.bresch@gmail.com, 20160703
 % david.bresch@gmail.com, 20170508, hint to bf_generator added, frequency added
+% david.bresch@gmail.com, 20170515, check_plot added
 %-
 
 hazard=[]; % init output
@@ -92,6 +93,7 @@ if ~climada_init_vars,return;end % init/import global variables
 if ~exist('csv_file','var'),csv_file=[];end % OR:
 if ~exist('centroids','var'),centroids=[];end % OR:
 if ~exist('hazard_set_file','var'),hazard_set_file=[];end
+if ~exist('check_plot','var'),check_plot=0;end
 
 % locate the module's (or this code's) data folder (usually  afolder
 % 'parallel' to the code folder, i.e. in the same level as code folder)
@@ -140,6 +142,7 @@ end
 % special treatment for TEST case
 if strcmp(csv_file,'TEST')
     TEST_mode=1;
+    check_plot=1;
     csv_file       =TEST_csv_file;
     centroids      =TEST_centroids_file;
     hazard_set_file=TEST_hazard_set_file;
@@ -203,7 +206,7 @@ y=[bbox(3)-dy bbox(4)+dy bbox(4)+dy bbox(3)-dy bbox(3)-dy];
 % restrict firms to points within
 firms_in=inpolygon(firms.lon,firms.lat,x,y);
 
-if TEST_mode % TEST plot
+if check_plot % plot
     figure('Name','TEST hazard for Victoria','Position',[576 198 791 475]);subplot(2,2,1);
     event_i=TEST_event_i; % max number of points for event_i=3839;
     event_pos= firms.datenum==firms.datenum_unique(event_i);
@@ -325,7 +328,7 @@ hazard.fraction=spones(hazard.intensity); % fraction 100%
 n_years=str2double(datestr(max(hazard.datenum),'yyyy'))-str2double(datestr(min(hazard.datenum),'yyyy'))+1;
 hazard.frequency=ones(1,hazard.event_count)/n_years;
 
-if TEST_mode % TEST plot
+if check_plot % check plot
     subplot(2,2,2);climada_hazard_plot(hazard,-1);
 end
 

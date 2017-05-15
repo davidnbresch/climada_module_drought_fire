@@ -103,6 +103,7 @@ mat_file=[fP filesep fN '.mat'];
 % figure file verison (as there seem to be diverse ones
 if findstr(fN,'archive_M6'),file_version='archive_M6';end
 if findstr(fN,'nrt_M6'),file_version='nrt_M6';end
+if findstr(fN,'nrt_V1'),file_version='nrt_V1';end
 
 if climada_check_matfile(csv_file,mat_file)
     load(mat_file);
@@ -126,9 +127,12 @@ else
         case 'archive_M6' % no first field, additional column instrument
             [firms.lat,firms.lon,firms.brightness,~,~,acq_date,acq_time,~,~,~,~,~,~] = ...
                 textread(csv_file,'%f%f%f%f%f%s%f%s%s%f%s%f%f','delimiter',',','headerlines',1);
-        case 'nrt_M6' % no first field, additional column instrument
+        case 'nrt_M6' % no first field, additional columns instrument and daynight
             [firms.lat,firms.lon,firms.brightness,~,~,acq_date,acq_time,~,~,~,~,~,~,~] = ...
                 textread(csv_file,'%f%f%f%f%f%s%f%s%s%f%s%f%f%s','delimiter',',','headerlines',1);
+        case 'nrt_V1' % no first field, additional columns instrument and daynight, confidence a string
+            [firms.lat,firms.lon,firms.brightness,~,~,acq_date,acq_time,~,~,~,~,~,~,~] = ...
+                textread(csv_file,'%f%f%f%f%f%s%f%s%s%s%s%f%f%s','delimiter',',','headerlines',1);
     end
     
     % process acq_date and acq_time
