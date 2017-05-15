@@ -12,6 +12,7 @@ function firms=firms_read(csv_file,check_plot)
 %      from https://firms.modaps.eosdis.nasa.gov/download (the full global
 %      dataset since 2000 is too large for a single download) and store the
 %      .csv file as ....
+%      download the file as .csv and select MODIS C6
 %   2. run firms_read to read the data
 %
 %   next call: bf_generator_large
@@ -34,6 +35,7 @@ function firms=firms_read(csv_file,check_plot)
 % OUTPUTS:
 %   firms: the data, a structure with fields
 %       filename: the original .csv filename with path
+%           reads files such as firms.csv, fire_nrt_M6_*.cvs, fire_archive_M6_*.cvs
 %       lat(i): latitudes of burning point i
 %       lon(i): longitudes of burning point i
 %       brightness(i): brightness of burning point i
@@ -43,6 +45,7 @@ function firms=firms_read(csv_file,check_plot)
 %           unique_IC: the output of [~,IA,IC]=unique
 % MODIFICATION HISTORY:
 % david.bresch@gmail.com, 20160703, initial
+% david.bresch@gmail.com, 20160715, formts archive_M6 and nrt_M6 added
 %-
 
 firms=[]; % init output
@@ -66,6 +69,8 @@ module_data_dir=[fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 %
 % set default value for check_plot if not given
 if isempty(check_plot),check_plot=0;end
+%
+file_version='firms'; % default
 %
 % TEST csv-file
 TEST_csv_file=[module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'firms.csv'];
@@ -95,6 +100,10 @@ end % strcmp(csv_file,'TEST')
 [fP,fN]=fileparts(csv_file);
 mat_file=[fP filesep fN '.mat'];
 
+% figure file verison (as there seem to be diverse ones
+if findstr(fN,'archive_M6'),file_version='archive_M6';end
+if findstr(fN,'nrt_M6'),file_version='nrt_M6';end
+
 if climada_check_matfile(csv_file,mat_file)
     load(mat_file);
 else
@@ -109,8 +118,18 @@ else
     fprintf('reading ...');
     % note: reads version as %s, since sometimes just '-', not a number
     %[geom,firms.latitude,firms.longitude,firms.brightness,scan,track,acq_date,acq_time,...
-    [~,firms.lat,firms.lon,firms.brightness,~,~,acq_date,acq_time,~,~,~,~,~] = ...
-        textread(csv_file,'%s%f%f%f%f%f%s%f%s%f%s%f%f','delimiter',',','headerlines',1);
+    
+    switch file_version
+        case 'firms'
+            [~,firms.lat,firms.lon,firms.brightness,~,~,acq_date,acq_time,~,~,~,~,~] = ...
+                textread(csv_file,'%s%f%f%f%f%f%s%f%s%f%s%f%f','delimiter',',','headerlines',1);
+        case 'archive_M6' % no first field, additional column instrument
+            [firms.lat,firms.lon,firms.brightness,~,~,acq_date,acq_time,~,~,~,~,~,~] = ...
+                textread(csv_file,'%f%f%f%f%f%s%f%s%s%f%s%f%f','delimiter',',','headerlines',1);
+        case 'nrt_M6' % no first field, additional column instrument
+            [firms.lat,firms.lon,firms.brightness,~,~,acq_date,acq_time,~,~,~,~,~,~,~] = ...
+                textread(csv_file,'%f%f%f%f%f%s%f%s%s%f%s%f%f%s','delimiter',',','headerlines',1);
+    end
     
     % process acq_date and acq_time
     fprintf(' converting date/time ...');
