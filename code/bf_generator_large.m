@@ -80,6 +80,7 @@ function hazard=bf_generator_large(csv_file,centroids,hazard_set_file,check_plot
 % david.bresch@gmail.com, 20160703
 % david.bresch@gmail.com, 20170508, hint to bf_generator added, frequency added
 % david.bresch@gmail.com, 20170515, check_plot added
+% david.bresch@gmail.com, 20170624, centroids avoided, entity used
 %-
 
 hazard=[]; % init output
@@ -121,12 +122,9 @@ create_yearset=0; % default=1 (not implemented yet)
 %
 % TEST files, used if called as hazard=bf_generator_large('TEST')
 TEST_csv_file       =[module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'firms.csv'];
-TEST_centroids_file =[module_data_dir filesep 'centroids' filesep 'AUS_BF_centroids.mat'];
 TEST_entity_file    =[module_data_dir filesep 'entities' filesep 'Victoria_today_adaptation.xlsx'];
 TEST_hazard_set_file='_TEST_AUS_BF_hazard_large';
 TEST_event_i=3839;
-%TEST_centroids_file=[module_data_dir filesep 'AUS_Australia_Victoria_entity'];
-
 
 % prompt for csv_file if not given
 if isempty(csv_file) % local GUI
@@ -144,12 +142,11 @@ if strcmp(csv_file,'TEST')
     TEST_mode=1;
     check_plot=1;
     csv_file       =TEST_csv_file;
-    centroids      =TEST_centroids_file;
+    centroids      =TEST_entity_file;
     hazard_set_file=TEST_hazard_set_file;
     if exist(csv_file,'file')
         fprintf('TEST mode, using %s\n',TEST_csv_file);
     else
-        fprintf('ERROR: %s not found, consider fetching from GitHub\n',TEST_csv_file);
         fprintf('ERROR: Test data %s not found\n',TEST_csv_file);
         fprintf(['Please download from <a href="https://github.com/davidnbresch/climada_module_drought_fire">'...
             'climada_module_drought_fire</a> from Github.\n'])
@@ -161,7 +158,24 @@ end % strcmp(csv_file,'TEST')
 
 % check (eventually prompt for) centroids
 % (climada_centroids_load does also convert an entity into  centroids)
-centroids=climada_centroids_load(centroids);
+centroids=climada_entity_read(centroids);
+
+if isfield(centroids,'assets')
+    % centroids contains in fact an entity
+    entity=centroids; centroids=[]; % silly switch, but fastest
+    centroids.lat =entity.assets.lat;
+    centroids.lon=entity.assets.lon;
+    centroids.centroid_ID=1:length(entity.assets.lon);
+    % treat optional fields
+    if isfield(entity.assets,'distance2coast_km'),centroids.distance2coast_km=entity.assets.distance2coast_km;end
+    if isfield(entity.assets,'elevation_m'),centroids.elevation_m=entity.assets.elevation_m;end
+    if isfield(entity.assets,'country_name'),centroids.country_name=entity.assets.country_name;end
+    if isfield(entity.assets,'admin0_name'),centroids.admin0_name=entity.assets.admin0_name;end
+    if isfield(entity.assets,'admin0_ISO3'),centroids.admin0_ISO3=entity.assets.admin0_ISO3;end
+    if isfield(entity.assets,'admin1_name'),centroids.admin1_name=entity.assets.admin1_name;end
+    if isfield(entity.assets,'admin1_code'),centroids.admin1_code=entity.assets.admin1_code;end
+    clear entity
+end
 
 % prompt for hazard_set_file if not given
 if isempty(hazard_set_file) % local GUI

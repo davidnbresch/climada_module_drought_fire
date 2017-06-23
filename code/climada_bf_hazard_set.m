@@ -85,7 +85,7 @@ if isempty(centroids) % local GUI
     else
         centroids=fullfile(pathname,filename);
     end
-    load(centroids); % ADDED because couldn't load file?!?!
+    load(centroids);
 end
 
 % prompt for hazard_set_file if not given
@@ -174,7 +174,7 @@ for i=1:n_events
     
 end % event_i
 fprintf(format_str,''); % move carriage to begin of line
-fprintf('after the loop\n')
+%fprintf('after the loop\n')
 
 % fill in the other hazard fields
 hazard.lon = centroids.lon;
