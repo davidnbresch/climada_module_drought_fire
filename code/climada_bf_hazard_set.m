@@ -186,6 +186,8 @@ hazard.orig_event_flag = zeros(1,size(bf,2));
 hazard.peril_ID = 'BF';
 % hazard.filename = hazard_set_file;
 
+hazard.fraction=spones(hazard.intensity); % fraction 100%
+
 if fscrew~=1
     hazard.comment = 'with climate change';
 else
