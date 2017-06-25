@@ -45,7 +45,8 @@ function firms=firms_read(csv_file,check_plot)
 %           unique_IC: the output of [~,IA,IC]=unique
 % MODIFICATION HISTORY:
 % david.bresch@gmail.com, 20160703, initial
-% david.bresch@gmail.com, 20160715, formts archive_M6 and nrt_M6 added
+% david.bresch@gmail.com, 20170515, formts archive_M6 and nrt_M6 added
+% david.bresch@gmail.com, 20160625, Victoria_firms.csv instead of firms.csv
 %-
 
 firms=[]; % init output
@@ -73,7 +74,7 @@ if isempty(check_plot),check_plot=0;end
 file_version='firms'; % default
 %
 % TEST csv-file
-TEST_csv_file=[module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'firms.csv'];
+TEST_csv_file=[module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'Victoria_firms.csv'];
 
 % template to prompt for filename if not given
 if isempty(csv_file) % local GUI

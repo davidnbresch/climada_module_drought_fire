@@ -35,9 +35,11 @@ module_data_dir=[fileparts(fileparts(which('bf_TEST_jumpy'))) filesep 'data']; %
 %
 % to run the whole TEST for another country, you should only have to change
 % the ISO3 code and csv_file:
-country_ISO3_code='ZAF';
+%country_ISO3_code='ZAF';
+country_ISO3_code='ESP';
 %csv_file = [module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'fire_archive_M6_11367.csv'];
-csv_file = [module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'fire_nrt_M6_ZAF_april.csv'];
+%csv_file = [module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'fire_nrt_M6_ZAF_april.csv'];
+csv_file = [module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'ESP_fire_archive_M6_13387.csv'];
 %
 plot_fires=0; % as this takes time, you csan set =0
 %

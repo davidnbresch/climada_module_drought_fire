@@ -5,7 +5,7 @@ function hazard=bf_generator_large(csv_file,centroids,hazard_set_file,check_plot
 % NAME:
 %   bf_generator_large
 % PURPOSE:
-%   Process the MODIS5 firms data in order to generate large fires.
+%   Process the MODIS5 FIRMS data in order to generate large fires.
 %   See also bf_generator_small to generate small fires (using a cellular
 %   automat)
 %
@@ -19,9 +19,7 @@ function hazard=bf_generator_large(csv_file,centroids,hazard_set_file,check_plot
 %   2. run bf_generate_large to process the data (calls firms_read) and to
 %      generate the bushfire hazard event set
 %
-%   previous call: generate an entity, see e.g. climada_nightlight_entity,
-%   climada_srtm_entity or climada_GDP_entity (all in
-%   https://github.com/davidnbresch/climada_module_country_risk)
+%   previous call: generate an entity, see e.g. climada_country_entity,
 %   next call: e.g. climada_EDS_calc
 %
 %   Citation for both MCD14DL and MCD14ML: This data set was
@@ -73,7 +71,6 @@ function hazard=bf_generator_large(csv_file,centroids,hazard_set_file,check_plot
 %       event_ID: a unique ID for each event
 %       date: the creation date of the set
 %       matrix_density: the density of the sparse array hazard.intensity
-%       windfield_comment: a free comment, not in all hazard event sets
 %       filename: the filename of the hazard event set (if passed as a
 %           struct, this is often useful)
 % MODIFICATION HISTORY:
@@ -81,6 +78,7 @@ function hazard=bf_generator_large(csv_file,centroids,hazard_set_file,check_plot
 % david.bresch@gmail.com, 20170508, hint to bf_generator added, frequency added
 % david.bresch@gmail.com, 20170515, check_plot added
 % david.bresch@gmail.com, 20170624, centroids avoided, entity used
+% david.bresch@gmail.com, 20170625, Victoria_firms.csv instead of firms.csv
 %-
 
 hazard=[]; % init output
@@ -121,7 +119,7 @@ hazard_scenario = 'no climate change';
 create_yearset=0; % default=1 (not implemented yet)
 %
 % TEST files, used if called as hazard=bf_generator_large('TEST')
-TEST_csv_file       =[module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'firms.csv'];
+TEST_csv_file       =[module_data_dir filesep 'hazards' filesep 'external_model_output' filesep 'Victoria_firms.csv'];
 TEST_entity_file    =[module_data_dir filesep 'entities' filesep 'Victoria_today_adaptation.xlsx'];
 TEST_hazard_set_file='_TEST_AUS_BF_hazard_large';
 TEST_event_i=3839;
@@ -142,7 +140,7 @@ if strcmp(csv_file,'TEST')
     TEST_mode=1;
     check_plot=1;
     csv_file       =TEST_csv_file;
-    centroids      =TEST_entity_file;
+    centroids      =climada_entity_read(TEST_entity_file);
     hazard_set_file=TEST_hazard_set_file;
     if exist(csv_file,'file')
         fprintf('TEST mode, using %s\n',TEST_csv_file);
@@ -158,24 +156,7 @@ end % strcmp(csv_file,'TEST')
 
 % check (eventually prompt for) centroids
 % (climada_centroids_load does also convert an entity into  centroids)
-centroids=climada_entity_read(centroids);
-
-if isfield(centroids,'assets')
-    % centroids contains in fact an entity
-    entity=centroids; centroids=[]; % silly switch, but fastest
-    centroids.lat =entity.assets.lat;
-    centroids.lon=entity.assets.lon;
-    centroids.centroid_ID=1:length(entity.assets.lon);
-    % treat optional fields
-    if isfield(entity.assets,'distance2coast_km'),centroids.distance2coast_km=entity.assets.distance2coast_km;end
-    if isfield(entity.assets,'elevation_m'),centroids.elevation_m=entity.assets.elevation_m;end
-    if isfield(entity.assets,'country_name'),centroids.country_name=entity.assets.country_name;end
-    if isfield(entity.assets,'admin0_name'),centroids.admin0_name=entity.assets.admin0_name;end
-    if isfield(entity.assets,'admin0_ISO3'),centroids.admin0_ISO3=entity.assets.admin0_ISO3;end
-    if isfield(entity.assets,'admin1_name'),centroids.admin1_name=entity.assets.admin1_name;end
-    if isfield(entity.assets,'admin1_code'),centroids.admin1_code=entity.assets.admin1_code;end
-    clear entity
-end
+centroids=climada_centroids_load(centroids);
 
 % prompt for hazard_set_file if not given
 if isempty(hazard_set_file) % local GUI
