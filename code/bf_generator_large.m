@@ -19,7 +19,7 @@ function hazard=bf_generator_large(csv_file,centroids,hazard_set_file,check_plot
 %   2. run bf_generate_large to process the data (calls firms_read) and to
 %      generate the bushfire hazard event set
 %
-%   previous call: generate an entity, see e.g. climada_country_entity,
+%   previous call: generate an entity, see e.g. climada_entity_country,
 %   next call: e.g. climada_EDS_calc
 %
 %   Citation for both MCD14DL and MCD14ML: This data set was
